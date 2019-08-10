@@ -166,7 +166,7 @@ $ make list-apps ENVIRONMENT=dev
 # hello-world operator
 hello_world_namespace_create: true
 hello_world_namespace_state: "present"
-hello_world_namespace_name: "hello-world-delete"
+hello_world_namespace_name: "hello-world"
 hello_world_operator_image: "slopezz/ansible-hello-world-operator:v1.1.0"
 hello_world_operator_state: "present"
 hello_world_operator_monitoring_state: "present"
@@ -217,23 +217,23 @@ ok: [dev-ocp-cluster]
 TASK [Set OCP cluster API KEY Token] ******************************************************************************************************************************************************************************
 ok: [dev-ocp-cluster]
 
-TASK [hello-world : Manage hello-world Namespace hello-world-delete] **********************************************************************************************************************************************
+TASK [hello-world : Manage hello-world Namespace hello-world] **********************************************************************************************************************************************
 changed: [dev-ocp-cluster]
 
-TASK [hello-world : Manage hello-world CRD on Namespace hello-world-delete] ***************************************************************************************************************************************
+TASK [hello-world : Manage hello-world CRD on Namespace hello-world] ***************************************************************************************************************************************
 ok: [dev-ocp-cluster]
 
-TASK [hello-world : Manage hello-world Operator main objects on Namespace hello-world-delete] *********************************************************************************************************************
+TASK [hello-world : Manage hello-world Operator main objects on Namespace hello-world] *********************************************************************************************************************
 changed: [dev-ocp-cluster] => (item={u'name': u'service_account.yaml.j2'})
 changed: [dev-ocp-cluster] => (item={u'name': u'role.yaml.j2'})
 changed: [dev-ocp-cluster] => (item={u'name': u'role_binding.yaml.j2'})
 changed: [dev-ocp-cluster] => (item={u'name': u'operator.yaml.j2'})
 
-TASK [hello-world : Manage hello-world Operator specific prometheus monitoring objects on Namespace hello-world-delete] *******************************************************************************************
+TASK [hello-world : Manage hello-world Operator specific prometheus monitoring objects on Namespace hello-world] *******************************************************************************************
 changed: [dev-ocp-cluster] => (item={u'name': u'operator-service.yaml.j2'})
 changed: [dev-ocp-cluster] => (item={u'name': u'operator-servicemonitor.yaml.j2'})
 
-TASK [hello-world : Manage hello-world CRs on Namespace hello-world-delete] ***************************************************************************************************************************************
+TASK [hello-world : Manage hello-world CRs on Namespace hello-world] ***************************************************************************************************************************************
 changed: [dev-ocp-cluster] => (item={u'dc_resources_limits_cpu': u'100m', u'name': u'example1', u'route_hosts': u'hello-world-example1.dev.example.net', u'is_image_tag': u'1.0', u'dc_resources_limits_memory': u'64Mi', u'state': u'present', u'dc_replicas': 1, u'is_image_latest_tag': u'1.0', u'dc_resources_requests_memory': u'32Mi', u'is_image_name': u'gcr.io/google-samples/hello-app:1.0', u'dc_resources_requests_cpu': u'50m'})
 changed: [dev-ocp-cluster] => (item={u'dc_resources_limits_cpu': u'100m', u'name': u'example2', u'route_hosts': u'hello-world-example2.dev.example.net', u'is_image_tag': u'2.0', u'dc_resources_limits_memory': u'64Mi', u'state': u'present', u'dc_replicas': 2, u'is_image_latest_tag': u'2.0', u'dc_resources_requests_memory': u'32Mi', u'is_image_name': u'gcr.io/google-samples/hello-app:2.0', u'dc_resources_requests_cpu': u'50m'})
 
