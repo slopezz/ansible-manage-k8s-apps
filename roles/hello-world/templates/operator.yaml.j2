@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hello-world-operator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: hello-world-operator
+  template:
+    metadata:
+      labels:
+        name: hello-world-operator
+    spec:
+      serviceAccountName: hello-world-operator
+      containers:
+        - name: ansible
+          command:
+          - /usr/local/bin/ao-logs
+          - /tmp/ansible-operator/runner
+          - stdout
+          image: "{{ hello_world_operator_image }}"
+          imagePullPolicy: "Always"
+          ports:
+          - containerPort: 8383
+            name: metrics
+            protocol: TCP
+          volumeMounts:
+          - mountPath: /tmp/ansible-operator/runner
+            name: runner
+            readOnly: true
+          resources: {}
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+        - name: operator
+          image: "{{ hello_world_operator_image }}"
+          imagePullPolicy: "Always"
+          volumeMounts:
+          - mountPath: /tmp/ansible-operator/runner
+            name: runner
+          env:
+            - name: WATCH_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: metadata.namespace
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: metadata.name
+            - name: OPERATOR_NAME
+              value: "hello-world-operator"
+          resources: {}
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+      volumes:
+        - name: runner
+          emptyDir: {}

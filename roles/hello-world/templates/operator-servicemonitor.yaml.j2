@@ -1,0 +1,15 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: hello-world-operator
+  labels:
+    name: hello-world-operator
+    {{ hello_world_operator_monitoring_label_key }}: {{ hello_world_operator_monitoring_label_value }}
+spec:
+  selector:
+    matchLabels:
+      name: hello-world-operator
+  endpoints:
+  - interval: 30s
+    port: metrics
+    path: /metrics

@@ -1,0 +1,1 @@
+dev-ocp-cluster ansible_connection=local

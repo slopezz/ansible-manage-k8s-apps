@@ -1,0 +1,14 @@
+apiVersion: hello-world-operator.com/v1alpha1
+kind: HelloWorld
+metadata:
+  name: "{{ item.name }}"
+spec:
+  helloWorldIsImageLatestTag: "{{ item.is_image_latest_tag }}"
+  helloWorldIsImageTag: "{{ item.is_image_tag }}"
+  helloWorldIsImageName: "{{ item.is_image_name }}"
+  helloWorldDcReplicas: {{ item.dc_replicas }}
+  helloWorldDcResourcesRequestsCpu: "{{ item.dc_resources_requests_cpu }}"
+  helloWorldDcResourcesRequestsMemory: "{{ item.dc_resources_requests_memory }}"
+  helloWorldDcResourcesLimitsCpu: "{{ item.dc_resources_limits_cpu }}"
+  helloWorldDcResourcesLimitsMemory: "{{ item.dc_resources_limits_memory }}"
+  helloWorldRouteHosts: "{{ item.route_hosts }}"

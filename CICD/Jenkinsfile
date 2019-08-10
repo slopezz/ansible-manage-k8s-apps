@@ -1,0 +1,135 @@
+#!/usr/bin/env groovy
+
+import jenkins.model.*
+
+this.timestamper = [$class: 'TimestamperBuildWrapper']
+this.colors = [$class: 'AnsiColorBuildWrapper', 'colorMapName': 'XTerm', 'defaultFg': 1, 'defaultBg': 2]
+this.ssh_credentials = '####SSH-CREDS-SECRET-ID#####'
+
+
+def configure() {
+
+  try {
+    this.branch_name = "${GITHUB_PR_SOURCE_BRANCH}"
+    println "BRANCH: ${this.branch_name}"
+    this.execution_from_pr_trigger = true
+  }
+  catch (e) {
+    echo "There was no variable GITHUB_PR_SOURCE_BRANCH, so using value from param GITHUB_BRANCH"
+    this.branch_name = "${GITHUB_BRANCH}"
+    println "BRANCH: ${this.branch_name}"
+    this.execution_from_pr_trigger = false
+  }
+
+  try {
+    this.branch_labels = "${GITHUB_PR_LABELS}"
+    echo "PR LABELS: ${GITHUB_PR_LABELS}"
+
+    def params = "${GITHUB_PR_LABELS}"
+
+    map = params.tokenize(",").collectEntries {
+        it.tokenize("=").with {
+        [(it[0]):it[1]]
+        }
+    }
+
+    this.app_name = "${map.APP}"
+    println "APP: ${this.app_name}"
+    this.environment_name = "${map.ENVIRONMENT}"
+    println "ENVIRONMENT: ${this.environment_name}"
+  }
+  catch (e) {
+    echo "There was no variable GITHUB_PR_LABELS to extract APP and ENVIRONMENT variables, so using values from params APPLICATION and OCP_CLUSTER_ENVIRONMENT"
+    this.app_name = "${APPLICATION}"
+    println "APP: ${this.app_name}"
+    this.environment_name = "${OCP_CLUSTER_ENVIRONMENT}"
+    println "ENVIRONMENT: ${this.environment_name}"
+  }
+
+  this.build_number = env.BUILD_NUMBER
+  currentBuild.displayName = "#${this.build_number} (${this.branch_name})"
+
+}
+
+def notifyFailed() {
+  // send to Slack
+  slackSend (color: '#FF0000', message: "FAILED: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL})")
+}
+
+def getRepoURL() {
+  sh "git config --get remote.origin.url > .git/remote-url"
+  return readFile(".git/remote-url").trim()
+}
+
+def getCommitSha() {
+  sh "git rev-parse HEAD > .git/current-commit"
+  return readFile(".git/current-commit").trim()
+}
+
+def updateGithubCommitStatus(String description, String state) {
+  // workaround https://issues.jenkins-ci.org/browse/JENKINS-38674
+  repoUrl = getRepoURL()
+  commitSha = getCommitSha()
+
+  step([
+    $class: 'GitHubCommitStatusSetter',
+    reposSource: [$class: "ManuallyEnteredRepositorySource", url: repoUrl],
+    commitShaSource: [$class: "ManuallyEnteredShaSource", sha: commitSha],
+    errorHandlers: [[$class: 'ShallowAnyErrorHandler']],
+    statusResultSource: [
+      $class: 'ConditionalStatusResultSource',
+      results: [
+        [$class: 'BetterThanOrEqualBuildResult', result: 'SUCCESS', state: 'SUCCESS', message: description],
+        [$class: 'BetterThanOrEqualBuildResult', result: 'FAILURE', state: 'FAILURE', message: description],
+        [$class: 'AnyBuildResult', state: 'FAILURE', message: 'Loophole']
+      ]
+    ]
+  ])
+}
+
+node("slave"){
+  def status = true
+
+  wrap(timestamper) {
+    stage("Triggering OCP Ansible deploy application") {
+      configure()
+      stage("Checkout Jenkinsfile") {
+        // Cloning the repository
+        checkout([
+          $class           : 'GitSCM',
+          branches         : [[name: this.branch_name]],
+          userRemoteConfigs: [[credentialsId: this.ssh_credentials,
+          url          : "git@github.com:slopezz/ansible-manage-k8s-apps.git"]]
+        ])
+        try {
+          withEnv(["APP=${this.app_name}",
+                   "ENVIRONMENT=${this.environment_name}"]) {
+            withCredentials([[$class: 'StringBinding',
+                              credentialsId: '${AWS_SECRET_ACCESS_KEY}',
+                              variable: 'AWS_SECRET_ACCESS_KEY']]) {
+                sh('make deploy-app APP=${APP} ENVIRONMENT=${ENVIRONMENT} CICD=true DRYRUN=${DRYRUN}')
+            }
+          }
+        }
+        catch (e) {
+          echo "Executing command failed"
+          status = false
+          currentBuild.result = 'FAILURE'
+          notifyFailed()
+          if (execution_from_pr_trigger) {
+            echo "Setting GitHub commit status to ${currentBuild.result}"
+            updateGithubCommitStatus("${currentBuild.result} - #${env.BUILD_NUMBER} - (${this.branch_name})." as String, "${currentBuild.result}" as String)
+          }
+        }
+      }
+    }
+
+    if (status) {
+      currentBuild.result = 'SUCCESS'
+      if (execution_from_pr_trigger) {
+        echo "Setting GitHub commit status to ${currentBuild.result}"
+        updateGithubCommitStatus("${currentBuild.result} - #${env.BUILD_NUMBER} - (${this.branch_name})." as String, "${currentBuild.result}" as String)
+      }
+    }
+  }
+}

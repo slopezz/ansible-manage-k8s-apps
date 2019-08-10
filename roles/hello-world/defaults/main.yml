@@ -1,0 +1,30 @@
+---
+
+# Common
+hello_world_namespace_create: false
+hello_world_namespace_state: "present"
+hello_world_namespace_name: "hello-world"
+hello_world_namespace_description: "Hello world example project"
+hello_world_namespace_display_name: "Hello World"
+hello_world_namespace_node_selector: ""
+
+# Operator
+hello_world_operator_image: "slopezz/ansible-hello-world-operator:v1.1.0"
+hello_world_operator_state: "present"
+hello_world_operator_monitoring_state: "absent"
+hello_world_operator_monitoring_label_key: "monitoring"
+hello_world_operator_monitoring_label_value: "enabled"
+
+# CR
+hello_world_cr:
+  - name: "example"
+    state: "present"
+    is_image_latest_tag: "1.0"
+    is_image_tag: "1.0"
+    is_image_name: "gcr.io/google-samples/hello-app:1.0"
+    dc_replicas: 2
+    dc_resources_requests_cpu: "50m"
+    dc_resources_requests_memory: "32Mi"
+    dc_resources_limits_cpu: "100m"
+    dc_resources_limits_memory: "64Mi"
+    route_hosts: "hello-world.example.net"

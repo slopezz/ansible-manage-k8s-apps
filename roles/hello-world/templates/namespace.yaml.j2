@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: "{{ hello_world_namespace_name }}"
+  annotations:
+    openshift.io/description: "{{ hello_world_namespace_description }}"
+    openshift.io/display-name: "{{ hello_world_namespace_display_name }}"
+    openshift.io/node-selector: "{{ hello_world_namespace_node_selector }}"
+{% if hello_world_operator_monitoring_state == "present" %}
+  labels:
+    {{ hello_world_operator_monitoring_label_key }}: {{ hello_world_operator_monitoring_label_value }}
+{% endif %}

@@ -1,0 +1,34 @@
+---
+
+# hello-world operator
+hello_world_namespace_create: true
+hello_world_namespace_state: "present"
+hello_world_namespace_name: "hello-world"
+hello_world_operator_image: "slopezz/ansible-hello-world-operator:v1.1.0"
+hello_world_operator_state: "present"
+hello_world_operator_monitoring_state: "present"
+hello_world_operator_monitoring_label_key: "{{ocp_cluster_prometheus_servicemonitor_monitoring_label_key }}"
+hello_world_operator_monitoring_label_value: "{{ ocp_cluster_prometheus_servicemonitor_monitoring_label_value }}"
+hello_world_cr:
+  - name: "example1"
+    state: "present"
+    is_image_latest_tag: "1.0"
+    is_image_tag: "1.0"
+    is_image_name: "gcr.io/google-samples/hello-app:1.0"
+    dc_replicas: 1
+    dc_resources_requests_cpu: "50m"
+    dc_resources_requests_memory: "32Mi"
+    dc_resources_limits_cpu: "100m"
+    dc_resources_limits_memory: "64Mi"
+    route_hosts: "hello-world-example1.dev.example.net"
+  - name: "example2"
+    state: "present"
+    is_image_latest_tag: "2.0"
+    is_image_tag: "2.0"
+    is_image_name: "gcr.io/google-samples/hello-app:2.0"
+    dc_replicas: 2
+    dc_resources_requests_cpu: "50m"
+    dc_resources_requests_memory: "32Mi"
+    dc_resources_limits_cpu: "100m"
+    dc_resources_limits_memory: "64Mi"
+    route_hosts: "hello-world-example2.dev.example.net"

@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: hello-world-operator
+  labels:
+    name: hello-world-operator
+spec:
+  clusterIP: None
+  ports:
+  - name: metrics
+    port: 8383
+    protocol: TCP
+    targetPort: 8383
+  selector:
+    name: hello-world-operator

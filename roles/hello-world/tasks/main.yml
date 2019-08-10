@@ -1,0 +1,56 @@
+---
+
+- name: Manage hello-world Namespace {{ hello_world_namespace_name }}
+  k8s:
+    host: "{{ ocp_cluster_host }}"
+    verify_ssl: no
+    api_key: "{{ ocp_cluster_api_key_token }}"
+    namespace: "{{ hello_world_namespace_name }}"
+    state: "{{ hello_world_namespace_state }}"
+    definition: "{{ lookup('template', 'namespace.yaml.j2') }}"
+  when: hello_world_namespace_create
+
+- name: Manage hello-world CRD on Namespace {{ hello_world_namespace_name }}
+  k8s:
+    host: "{{ ocp_cluster_host }}"
+    verify_ssl: no
+    api_key: "{{ ocp_cluster_api_key_token }}"
+    namespace: "{{ hello_world_namespace_name }}"
+    definition: "{{ lookup('template', 'crd.yaml.j2') }}"
+
+- name: Manage hello-world Operator main objects on Namespace {{ hello_world_namespace_name }}
+  k8s:
+    host: "{{ ocp_cluster_host }}"
+    verify_ssl: no
+    api_key: "{{ ocp_cluster_api_key_token }}"
+    namespace: "{{ hello_world_namespace_name }}"
+    state: "{{ hello_world_operator_state }}"
+    definition: "{{ lookup('template', item.name) | from_yaml }}"
+  loop:
+    - name: service_account.yaml.j2
+    - name: role.yaml.j2
+    - name: role_binding.yaml.j2
+    - name: operator.yaml.j2
+
+- name: Manage hello-world Operator specific prometheus monitoring objects on Namespace {{ hello_world_namespace_name }}
+  k8s:
+    host: "{{ ocp_cluster_host }}"
+    verify_ssl: no
+    api_key: "{{ ocp_cluster_api_key_token }}"
+    namespace: "{{ hello_world_namespace_name }}"
+    state: "{{ hello_world_operator_monitoring_state }}"
+    definition: "{{ lookup('template', item.name) | from_yaml }}"
+  loop:
+    - name: operator-service.yaml.j2
+    - name: operator-servicemonitor.yaml.j2
+
+- name: Manage hello-world CRs on Namespace {{ hello_world_namespace_name }}
+  k8s:
+    host: "{{ ocp_cluster_host }}"
+    verify_ssl: no
+    api_key: "{{ ocp_cluster_api_key_token }}"
+    namespace: "{{ hello_world_namespace_name }}"
+    state: "{{ item.state }}"
+    definition: "{{ lookup('template', 'cr.yaml.j2') }}"
+  with_items:
+    - "{{ hello_world_cr }}"
